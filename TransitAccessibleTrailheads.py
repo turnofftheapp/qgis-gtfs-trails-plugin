@@ -29,6 +29,7 @@ from qgis.core import QgsPoint, QgsCoordinateReferenceSystem, QgsCoordinateTrans
 from PyQt4.QtCore import *
 from qgis.analysis import *
 from collections import defaultdict
+import numpy
 
 # Initialize Qt resources from file resources.py
 import resources
@@ -203,6 +204,8 @@ class FindTransitAccessibleTrailheads:
         StopsShapefileName = "stops"
         TrailheadData_shp = self.dlg.TrailheadData.text()
         BufferDistance = self.dlg.BufferDistance.text()
+        th_id_field = self.dlg.th_id_field.text()
+        th_name_field = self.dlg.th_name_field.text()
         outputGeoJSON = self.dlg.outputGeoJSON.text()
         ###trailBufferShpName = self.dlg.trailBufferShpName.text()
         #in_format = []
@@ -212,8 +215,11 @@ class FindTransitAccessibleTrailheads:
         trailBufferShpName = "trailBuff"
         working_dir_name = self.dlg.working_dir.text()
         #
-        shapefile_th = self.dlg.checkBoxShapefile.isChecked() # returns True if checked
-        postGIS_th = self.dlg.checkBoxPostGIS.isChecked()
+        ##shapefile_th = self.dlg.checkBoxShapefile.isChecked() # returns True if checked
+        ##postGIS_th = self.dlg.checkBoxPostGIS.isChecked()
+        #
+        shapefile_th = self.dlg.radioButtonShapefile.isChecked() # returns True if checked
+        postGIS_th = self.dlg.radioButtonPostGIS.isChecked()
         #
         host_name = self.dlg.host_name.text()
         port = self.dlg.port.text()
@@ -238,6 +244,7 @@ class FindTransitAccessibleTrailheads:
         ##output_file = open(filename, 'w')
         # See if OK was pressed
         if result:
+            start_time = datetime.datetime.now().replace(microsecond=0)
             stop_id = "UNK"
             stop_name = "UNK"
             stop_lat = "UNK"
@@ -273,6 +280,10 @@ class FindTransitAccessibleTrailheads:
             spatialReferenceWM.ImportFromEPSG(int(EPSG_code_WM)) #here we define this reference to be the EPSG code
             driver = osgeo.ogr.GetDriverByName('ESRI Shapefile') # will select the driver for our shp-file creation.
             # create layer
+            #if shapefile_th_rb:
+            #    print "USING Shapefiles!"
+            #if postGIS_th_rb:
+            #    print "USING PostGIS!"			
             ##vl = QgsVectorLayer("Point", "stop_points", "memory")
             vl = QgsVectorLayer("Point?crs=EPSG:3857", "stop_points", "memory")
 			##vl.spatialReference
@@ -305,13 +316,13 @@ class FindTransitAccessibleTrailheads:
                     c_stop_name = counter
                 if f == "stop_lat":
                     c_stop_lat = counter
-                    print "c_stop_lat"
-                    print c_stop_lat
+                    #print "stop_lat is in column ", c_stop_lat
+                    #print c_stop_lat
                 if f == "stop_lon":
                     c_stop_lon = counter
-                    print "c_stop_lon"
-                    print c_stop_lon
-                    print "three"
+                    #print "stop_lon is in column ", c_stop_lon
+                    ##print c_stop_lon
+                    ##print "three"
                 counter = counter + 1
                 #
             with open(text_file, 'r') as f:
@@ -319,8 +330,8 @@ class FindTransitAccessibleTrailheads:
 				for line in lines:
 					h = '"'					
 					if h in line:
-						print "There is a quote in the line"
 						count = line.count(h)
+						print "Removed quote from line" + str(count)
 						while count > 0:
 							#print [pos for pos, char in enumerate(line) if char == c]
 							cc = [pos for pos, char in enumerate(line) if char == h]
@@ -338,7 +349,7 @@ class FindTransitAccessibleTrailheads:
 									line4 = line[(endP + 1):-1]
 									lineMod = line1 + line2 + line3 + line4
 									#print line
-									print "Comma removed"
+									#print "Comma removed"
 									#print lineMod
 									line = lineMod
 									count = line.count(h)
@@ -368,7 +379,7 @@ class FindTransitAccessibleTrailheads:
             ymin = stops_extent.yMinimum()
             xmax = stops_extent.xMaximum()
             ymax = stops_extent.yMaximum()
-            QgsMapLayerRegistry.instance().addMapLayer(vl)
+            ##QgsMapLayerRegistry.instance().addMapLayer(vl)
 			#
 			# Add trailheads from postGIS if postGIS_th = True 			
             #
@@ -377,7 +388,7 @@ class FindTransitAccessibleTrailheads:
                 # set host name, port, database name, username and password
                 #uri.setConnection("localhost", "5432", "dbname", "johny", "xxx")
                 uri.setConnection(host_name, port, database_name, uname, password)
-                print "made a connection"
+                print "made PostGIS connection successfully"
                 # set database schema, table name, geometry column and optionally
                 # subset (WHERE clause)
                 #uri.setDataSource("public", "roads", "the_geom", "cityid = 2643")
@@ -412,7 +423,7 @@ class FindTransitAccessibleTrailheads:
                 TH_layer = QgsVectorLayer(THShp, "TH_layer", "ogr")
                 if not TH_layer.isValid():
                 	print "TH.shp layer failed to load!"	
-                QgsMapLayerRegistry.instance().addMapLayer(TH_layer)
+                ########## this adds trailheads to the map canvas ########QgsMapLayerRegistry.instance().addMapLayer(TH_layer)
                 iter = TH_layer.getFeatures()
                 #for feature in iter:
                 #    geomIn = feature.geometry()
@@ -432,7 +443,7 @@ class FindTransitAccessibleTrailheads:
             #
             if shapefile_th:
                 trailhead_layer = QgsVectorLayer(TrailheadData_shp, "trailhead_layer", "ogr")
-                QgsMapLayerRegistry.instance().addMapLayer(trailhead_layer)
+                ######### this adds trailsheads to map canvas############QgsMapLayerRegistry.instance().addMapLayer(trailhead_layer)
                 if not trailhead_layer.isValid():
             	    print "trailhead layer failed to load!"
 			# 
@@ -455,6 +466,9 @@ class FindTransitAccessibleTrailheads:
                     geom = feature.geometry()
             	    feature_name = feature['name']
             	    feature_id = feature['FEAT_ID']
+                    th_x = geom.asPoint().x()	
+                    th_y = geom.asPoint().y()
+            	    print th_x, th_y
             	    trailhead_pt_WM = xform.transform(QgsPoint(geom.asPoint()))
             	    fet = QgsFeature()
             	    fet.setGeometry(QgsGeometry.fromPoint(trailhead_pt_WM))
@@ -487,8 +501,10 @@ class FindTransitAccessibleTrailheads:
                     geom = QgsGeometry.fromPoint(QgsPoint(ptX, ptY))
                     #geom = QgsGeometry.fromWkt("POINT (-122.24501049999997804 47.86390650000004143)")
                     ###geom = feature.geometry()
-                    feature_name = feature['name']
-                    feature_id = feature['FEAT_ID']
+                    ###feature_name = feature['name']
+                    ###feature_id = feature['FEAT_ID']
+                    feature_name = feature[th_name_field]
+                    feature_id = feature[th_id_field]
             	    trailhead_pt_WM = xform.transform(QgsPoint(geom.asPoint()))
             	    fet = QgsFeature()
             	    fet.setGeometry(QgsGeometry.fromPoint(trailhead_pt_WM))
@@ -546,8 +562,8 @@ class FindTransitAccessibleTrailheads:
             	feature_id = feature['stop_id']
             	stopList.append(feature_id)				
             	#feature_id = feature['FEAT_ID']
-            for s in stopList:
-            	print s
+            #for s in stopList:
+            #	print s
             #
             # overlay - using the indivdual buffered points
             # this can be used to compute distance between trailhaeds and each stop in its buffer
@@ -568,10 +584,13 @@ class FindTransitAccessibleTrailheads:
             	#geom = feature.geometry()
 				###print "Feature ID %d: " % feature.id()
 				###print geom.type()
+            	###trailhead_name = feature['name']
+            	###trailhead_id = feature['FEAT_ID']				
             	trailhead_name = feature['name']
-            	trailhead_id = feature['FEAT_ID']				
-            	feature_id = feature['stop_id']
-            	TH_Stop = str(trailhead_id) + "|" +  str(feature_id)				
+            	trailhead_id = feature[th_id_field]				
+            	feature_id = feature[th_name_field]
+            	feature_id = "u" + str(feature_id)
+            	TH_Stop = str(trailhead_id) + ":" +  str(feature_id)				
             	#print feature['stop_id']
             	THstopList.append(TH_Stop)
             	DList_TrailsStops[trailhead_id].append(feature_id)
@@ -590,7 +609,94 @@ class FindTransitAccessibleTrailheads:
             print "Stops layer extent (upper):", stop_pt_WM
             print self.plugin_dir
             sys.argv = [GTFSDir, stopList]
-            SummarizeTransitService = os.path.join(self.plugin_dir, "SummarizeTransitService.py")
-            execfile(SummarizeTransitService)
-
+            missing_files = []
+            all_files_present = True
+            fn_stop_times = "stop_times.txt"
+            f_stop_times = os.path.join(GTFSDir, fn_stop_times)
+            if not os.path.exists(f_stop_times):
+            	all_files_present = False   
+            	missing_files.append(fn_stop_times)   
+            fn_stops = "stops.txt"
+            f_stops = os.path.join(GTFSDir, fn_stops)
+            if not os.path.exists(f_stops):
+            	all_files_present = False   
+            	missing_files.append(fn_stops)   
+            fn_trips = "trips.txt"
+            f_trips = os.path.join(GTFSDir, fn_trips)
+            if not os.path.exists(f_trips):
+            	all_files_present = False   
+            	missing_files.append(fn_trips)   
+            fn_routes = "routes.txt"
+            f_routes = os.path.join(GTFSDir, fn_routes)
+            if not os.path.exists(f_routes):
+            	all_files_present = False   
+            	missing_files.append(fn_routes)   
+            fn_agency = "agency.txt"
+            f_agency = os.path.join(GTFSDir, fn_agency)
+            if not os.path.exists(f_agency):
+            	all_files_present = False   
+            	missing_files.append(fn_agency)   
+            #if working_dir doesn't exist, create it
+            ###if os.path.exists(f_stop_times):			
+            if all_files_present:
+            	print "starting service analysis...this might take some time"   
+            	SummarizeTransitService = os.path.join(self.plugin_dir, "SummarizeTransitService.py")
+            	execfile(SummarizeTransitService)
+            else:
+            	print "The GTFS appears to be incomplete.  The following files seem to be missing."   				
+            	#print "The GTFS appears to be incomplete.  Check that all parts are present and try again."   				
+            	for f in missing_files:
+            	    print f
+				##create empty dictionary
+            ##  BEGIN DISTANCE CODE!
+            distance_dictionary = {}
+            ### (temporarily) set ref to TAT in case
+            ##Enter data into Dictionary
+            iter = vltWM.getFeatures()
+            #iter = TAToutput.getFeatures()
+            ##THstopList = []
+            for feature in iter:
+            	##identifies attributes for future use
+            	#print "Feature ID %d: " % feature.id()
+            	trailhead_id = feature[str('FEAT_ID')]
+            	geom = feature.geometry()
+                th_x = geom.asPoint().x()	
+                th_y = geom.asPoint().y()
+                th_point = QgsPoint(th_x,th_y)
+            	#transit_stop_id = feature['stop_id']
+            	### replace this line with something that selects features from TAToutput that have the same trailhead id here...
+            	iter_stops = TAT_layer.getFeatures() ###[new layer here?]
+            	for stop_feature in iter_stops:
+            	##identifies attributes for future use
+            	    #print "Feature ID %d: " % feature.id()
+            	    stop_id = stop_feature[str('stop_id')]
+            	    th_id = stop_feature[str('FEAT_ID')]
+            	    if th_id == trailhead_id:
+            	        stop_geom = stop_feature.geometry()
+            	        stop_id = stop_feature['stop_id']
+            	        ###print trailhead_id, stop_id
+                        stop_x = stop_geom.asPoint().x()	
+                        stop_y = stop_geom.asPoint().y()
+            	        #print stop_x, stop_y
+                        ### I think  we are using Web Mercator points, so the line below is all that is needed here..but (see below) 
+            	        s_point = QgsPoint(stop_x,stop_y)
+            	        ### if the points were lat / lon, we would transform them and use the line below (and commenting out the line above!):
+            	        ###s_point = xform.transform(QgsPoint(stop_lon,stop_lat))
+                        ### replace this line with something that figures out Euclidian dist
+            	        stop_distance = 0
+					    #def dist(x,y):
+                        #         return numpy.sqrt(numpy.sum(x-y)**2)
+            	        a = numpy.array(th_point)
+            	        b = numpy.array(s_point)
+            	        #stop_distance = dist(a,b)
+            	        stop_distance = numpy.sqrt(numpy.sum(a-b)**2)
+                        # stop_distance = th_point (distance from) s_point
+                        th_stop = str(trailhead_id) + ":" + str(stop_id)
+                        #print th_stop
+                        distance_dictionary[th_stop] = stop_distance 		
+            ## below is a placeholder for the distance calculations!
+            ###print distance_dictionary
 			#pass
+            end_time = datetime.datetime.now().replace(microsecond=0)
+            print(end_time-start_time)
+            print "done"
