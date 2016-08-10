@@ -16,9 +16,9 @@
   <widget class="QDialogButtonBox" name="button_box">
    <property name="geometry">
     <rect>
-     <x>50</x>
+     <x>220</x>
      <y>590</y>
-     <width>341</width>
+     <width>171</width>
      <height>32</height>
     </rect>
    </property>
@@ -455,7 +455,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Table expression (optional)</string>
+    <string>Expression for PostGIS table (optional)</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="tbPostGISExpr">
@@ -469,6 +469,19 @@
    </property>
    <property name="placeholderText">
     <string>county = 'King'</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="cbAddToMapCanvas">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>590</y>
+     <width>191</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Add output data to map canvas?</string>
    </property>
   </widget>
  </widget>
