@@ -103,6 +103,9 @@
      <height>20</height>
     </rect>
    </property>
+   <property name="text">
+    <string>sample</string>
+   </property>
   </widget>
   <widget class="QLabel" name="label_4">
    <property name="geometry">
@@ -224,7 +227,7 @@
   <widget class="QLabel" name="label_11">
    <property name="geometry">
     <rect>
-     <x>170</x>
+     <x>140</x>
      <y>230</y>
      <width>47</width>
      <height>13</height>
@@ -263,7 +266,7 @@
   <widget class="QLineEdit" name="password">
    <property name="geometry">
     <rect>
-     <x>170</x>
+     <x>140</x>
      <y>250</y>
      <width>91</width>
      <height>20</height>
@@ -276,9 +279,9 @@
   <widget class="QLineEdit" name="postGIS_table_name">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>300</y>
-     <width>221</width>
+     <x>240</x>
+     <y>250</y>
+     <width>141</width>
      <height>20</height>
     </rect>
    </property>
@@ -289,9 +292,9 @@
   <widget class="QLabel" name="pgTableLabel">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>280</y>
-     <width>151</width>
+     <x>240</x>
+     <y>230</y>
+     <width>141</width>
      <height>16</height>
     </rect>
    </property>
@@ -304,7 +307,7 @@
     <rect>
      <x>30</x>
      <y>250</y>
-     <width>113</width>
+     <width>101</width>
      <height>20</height>
     </rect>
    </property>
@@ -428,9 +431,6 @@
      <string>From shapefile</string>
     </property>
    </widget>
-   <zorder>radioButtonPostGIS</zorder>
-   <zorder>radioButtonShapefile</zorder>
-   <zorder>label_2</zorder>
   </widget>
   <widget class="QLabel" name="label_2">
    <property name="geometry">
@@ -443,6 +443,32 @@
    </property>
    <property name="text">
     <string>Details for PostGIS data:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_7">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>280</y>
+     <width>251</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Table expression (optional)</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="tbPostGISExpr">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>300</y>
+     <width>351</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="placeholderText">
+    <string>county = 'King'</string>
    </property>
   </widget>
  </widget>

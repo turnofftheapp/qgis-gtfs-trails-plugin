@@ -24,7 +24,7 @@ from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt4.QtGui import QAction, QIcon
 import osgeo.ogr, osgeo.osr #we will need some packages
 from osgeo import ogr #and one more for the creation of a new field
-from qgis.core import QgsVectorLayer, QgsField, QgsMapLayerRegistry, QgsVectorDataProvider, QgsFeature, QgsGeometry  
+from qgis.core import QgsVectorLayer, QgsField, QgsMapLayerRegistry, QgsVectorDataProvider, QgsFeature, QgsGeometry, QgsVectorFileWriter  
 from qgis.core import QgsPoint, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsDataSourceURI, QgsRectangle
 from PyQt4.QtCore import *
 from qgis.analysis import *
@@ -207,6 +207,7 @@ class FindTransitAccessibleTrailheads:
         th_id_field = self.dlg.th_id_field.text()
         th_name_field = self.dlg.th_name_field.text()
         outputGeoJSON = self.dlg.outputGeoJSON.text()
+        PostGISExpr = self.dlg.tbPostGISExpr.text()
         ###trailBufferShpName = self.dlg.trailBufferShpName.text()
         #in_format = []
         #in_format.append("Shapefile")
@@ -392,7 +393,8 @@ class FindTransitAccessibleTrailheads:
                 # set database schema, table name, geometry column and optionally
                 # subset (WHERE clause)
                 #uri.setDataSource("public", "roads", "the_geom", "cityid = 2643")
-                uri.setDataSource("public", postGIS_table_name, "geom", "")
+                #uri.setDataSource("public", postGIS_table_name, "geom", PostGISExpr)
+                uri.setDataSource("public", postGIS_table_name, "geom", PostGISExpr)
                 #
                 #vlayer = QgsVectorLayer(uri.uri(), "layer name you like", "postgres")
                 DB_TH_layer = QgsVectorLayer(uri.uri(), "DB_TH_layer", "postgres")
@@ -529,6 +531,10 @@ class FindTransitAccessibleTrailheads:
             #	
             #	Add WM trailheads to the map canvas
             #
+            print "PostGISExpr"
+            print PostGISExpr
+            if PostGISExpr == "":
+                print "NO EXPR!"
             QgsMapLayerRegistry.instance().addMapLayer(vltWM)
             #	Buffer stops
             vltb = QgsVectorLayer("Point?crs=EPSG:3857", "trailhead_buffer_dissolved", "memory")
@@ -588,8 +594,9 @@ class FindTransitAccessibleTrailheads:
             	###trailhead_id = feature['FEAT_ID']				
             	trailhead_name = feature['name']
             	trailhead_id = feature[th_id_field]				
-            	feature_id = feature[th_name_field]
-            	feature_id = "u" + str(feature_id)
+            	#####feature_id = feature[th_name_field]
+            	####feature_id = "u" + str(feature_id)
+            	feature_id = feature['FEAT_ID']
             	TH_Stop = str(trailhead_id) + ":" +  str(feature_id)				
             	#print feature['stop_id']
             	THstopList.append(TH_Stop)
@@ -650,6 +657,7 @@ class FindTransitAccessibleTrailheads:
 				##create empty dictionary
             ##  BEGIN DISTANCE CODE!
             distance_dictionary = {}
+            DList_TH_stops = defaultdict(list)
             ### (temporarily) set ref to TAT in case
             ##Enter data into Dictionary
             iter = vltWM.getFeatures()
@@ -674,6 +682,7 @@ class FindTransitAccessibleTrailheads:
             	    if th_id == trailhead_id:
             	        stop_geom = stop_feature.geometry()
             	        stop_id = stop_feature['stop_id']
+            	        DList_TH_stops[th_id].append(stop_id)
             	        ###print trailhead_id, stop_id
                         stop_x = stop_geom.asPoint().x()	
                         stop_y = stop_geom.asPoint().y()
@@ -697,6 +706,77 @@ class FindTransitAccessibleTrailheads:
             ## below is a placeholder for the distance calculations!
             ###print distance_dictionary
 			#pass
+            ##outputGeoJSON
+            vl_outTH = QgsVectorLayer("Point?crs=EPSG:4326", "stop_points", "memory")
+			##vl.spatialReference
+            pr_outTH = vl_outTH.dataProvider()
+            #
+            # changes are only possible when editing the layer
+            vl_outTH.startEditing()
+            # add fields
+            pr_outTH.addAttributes([QgsField(th_id_field, QVariant.Int),QgsField(th_name_field, QVariant.String),QgsField("stops_near", QVariant.String),QgsField("stops_near_dist", QVariant.String)])
+            index = 0
+            iter = trailhead_layer.getFeatures()
+            print "using shape"
+            for feature in iter:
+                geom = feature.geometry()
+                feature_id = feature[th_id_field]
+                feature_name = feature[th_name_field]
+                stops_near = str(DList_TH_stops[feature_id])
+                stops_near = stops_near.replace("u'", "")
+                stops_near = stops_near.replace("'", "")
+                stops_near = stops_near.replace("[", "")
+                stops_near = stops_near.replace("]", "")
+                #print stops_near
+                dist_list = []
+                stops_near_L = DList_TH_stops[feature_id]
+                for s in stops_near_L:
+                    #print s
+                    k = str(feature_id) + ":" + str(s)
+                    dist = distance_dictionary[k]
+                    dist = int(dist)
+                    dist_list_data = str(s) + ':' + str(dist)
+                    if not dist_list_data in dist_list:
+                        dist_list.append(dist_list_data)					
+                    ##print dist_list_data 
+            	#trailhead_pt_WM = xform.transform(QgsPoint(geom.asPoint()))
+            	#print "dist_list"
+            	#print dist_list
+                #dist_list = dist_list.replace("u'", "")
+                #dist_list = dist_list.replace("'", "")
+                dist_list = str(dist_list)
+                dist_list = dist_list.replace("[", "")
+                dist_list = dist_list.replace("]", "")
+            	fet = QgsFeature()
+            	fet.setGeometry(geom)
+            	#fet.setGeometry(QgsGeometry.fromPoint(geom))
+            	fet.setAttributes([feature_id, feature_name, stops_near, dist_list])
+            	pr_outTH.addFeatures([fet])
+            	vl_outTH.commitChanges()
+            GeoJSONfile = os.path.join(GTFSDir, outputGeoJSON)
+            writeString = ""
+            QgsVectorFileWriter.writeAsVectorFormat(vl_outTH, GeoJSONfile, "utf-8", None, "GeoJSON")
+            #file = open(GeoJSONfile, "w")
+            ##file.write(fieldnames + "\n")
+            #iter = vltWM.getFeatures()
+            #for feature in iter:
+            #	##identifies attributes for future use
+            #	#print "Feature ID %d: " % feature.id()
+            #	trailhead_id = feature[str('FEAT_ID')]
+            #	#trailhead_id = feature['FEAT_ID']
+            #	geom = feature.geometry()
+            #    th_x = geom.asPoint().x()	
+            #    th_y = geom.asPoint().y()
+            #    writeLine = ''
+            #    writeLine = '{ "type": "Feature", "properties": { "FEAT_ID": ' + str(trailhead_id) # + '\n'
+            #    #writeLine = writeLine  + ' "STOPS_NEARBY": ' + str(DList_TH_stops[trailhead_id])  ###'\n'
+            #    writeLine = writeLine  + ' "STOPS_NEARBY": ' + DList_TH_stops[trailhead_id]  ###'\n'
+            #    writeLine = writeLine  + '				}, "geometry": { "type": "Point", "coordinates": [ '
+            #    writeLine = writeLine  + str(th_x) + ' ' + str(th_x) + ' ] } }'
+            #    writeLine = writeLine  + ', \n'
+            #    writeString = writeString + writeLine 
+            #file.write(writeString)
+            #file.close()
             end_time = datetime.datetime.now().replace(microsecond=0)
             print(end_time-start_time)
             print "done"
