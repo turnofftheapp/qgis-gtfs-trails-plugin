@@ -200,14 +200,16 @@ class FindTransitAccessibleTrailheads:
         result = self.dlg.exec_()
         GTFSDir = self.dlg.GTFSLocation.text()
         StopsFile = self.dlg.StopsFile.text()
+        stopID = self.dlg.stopID.text()
         ###StopsShapefileName = self.dlg.StopsShapefileName.text()
         StopsShapefileName = "stops"
+        AddToMapCanvas = False
         TrailheadData_shp = self.dlg.TrailheadData.text()
         BufferDistance = self.dlg.BufferDistance.text()
         th_id_field = self.dlg.th_id_field.text()
         th_name_field = self.dlg.th_name_field.text()
         outputGeoJSON = self.dlg.outputGeoJSON.text()
-        PostGISExpr = self.dlg.tbPostGISExpr.text()
+        PostGISExpr = self.dlg.tbPostGISExpr.text()		
         AddToMapCanvas = self.dlg.cbAddToMapCanvas.isChecked() # returns True if checked
         ###trailBufferShpName = self.dlg.trailBufferShpName.text()
         #in_format = []
@@ -554,12 +556,14 @@ class FindTransitAccessibleTrailheads:
 				geometryanalyzer = QgsGeometryAnalyzer()
 				geometryanalyzer.buffer(vltWM, StopsShapefileBufferPath + ".shp", int(BufferDistance), False, False, -1)
 				trailheadBuffer_layer = QgsVectorLayer(StopsShapefileBufferPath + ".shp", "trailhead_buffer_layer", "ogr")
-				QgsMapLayerRegistry.instance().addMapLayer(trailheadBuffer_layer)
+				if AddToMapCanvas:
+				    QgsMapLayerRegistry.instance().addMapLayer(trailheadBuffer_layer)
 				# 
 				geometryanalyzer.buffer(vltWM, StopsShapefileBufferPath + "d.shp", int(BufferDistance), False, True, -1)
 				#trailheadBufferd_layer = QgsVectorLayer(StopsShapefileBufferPath + "d.shp", "trailhead_buffer_d", "ogr")
 				trailheadBufferd_layer = QgsVectorLayer(StopsShapefileBufferPath + "d.shp", "trailhead_buffer_d", "ogr")
-				QgsMapLayerRegistry.instance().addMapLayer(trailheadBufferd_layer)
+				if AddToMapCanvas:
+				    QgsMapLayerRegistry.instance().addMapLayer(trailheadBufferd_layer)
 				# 
 				# overlay - using dissolved buffer
 				# 
@@ -570,12 +574,13 @@ class FindTransitAccessibleTrailheads:
 				TATd_layer = QgsVectorLayer(TATdShp, "TrAccTrailheads_diss_layer", "ogr")
 				if not TATd_layer.isValid():
 					print "TATd layer failed to load!"	
-				QgsMapLayerRegistry.instance().addMapLayer(TATd_layer)
+				if AddToMapCanvas:
+				    QgsMapLayerRegistry.instance().addMapLayer(TATd_layer)
 				iter = TATd_layer.getFeatures()
 				stopList = []
 				for feature in iter:
 					# retrieve every feature with its geometry and attributes
-					feature_id = feature['stop_id']
+					feature_id = feature[stopID]
 					stopList.append(feature_id)				
 					#feature_id = feature['FEAT_ID']
 				#for s in stopList:
@@ -591,7 +596,8 @@ class FindTransitAccessibleTrailheads:
 				TAT_layer = QgsVectorLayer(TATShp, "TrAccTrailheads_layer", "ogr")
 				if not TAT_layer.isValid():
 					print "TAT layer failed to load!"	
-				QgsMapLayerRegistry.instance().addMapLayer(TAT_layer)
+				if AddToMapCanvas:
+				    QgsMapLayerRegistry.instance().addMapLayer(TAT_layer)
 				iter = TAT_layer.getFeatures()
 				THstopList = []
 				for feature in iter:
@@ -602,11 +608,12 @@ class FindTransitAccessibleTrailheads:
 					###print geom.type()
 					###trailhead_name = feature['name']
 					###trailhead_id = feature['FEAT_ID']				
-					trailhead_name = feature['name']
+					###trailhead_name = feature['name']
 					trailhead_id = feature[th_id_field]				
 					#####feature_id = feature[th_name_field]
-					####feature_id = "u" + str(feature_id)
-					feature_id = feature['FEAT_ID']
+					####feature_id = "u" + str(feature_id)th_id_field
+					##feature_id = feature['FEAT_ID']
+					feature_id = feature[th_id_field]
 					TH_Stop = str(trailhead_id) + ":" +  str(feature_id)				
 					#print feature['stop_id']
 					THstopList.append(TH_Stop)
@@ -724,10 +731,10 @@ class FindTransitAccessibleTrailheads:
 				# changes are only possible when editing the layer
 				vl_outTH.startEditing()
 				# add fields
-				pr_outTH.addAttributes([QgsField(th_id_field, QVariant.Int),QgsField(th_name_field, QVariant.String),QgsField("number_stops_nearby", QVariant.Int),QgsField("stops_near", QVariant.String),QgsField("stops_near_dist", QVariant.String)])
+				##pr_outTH.addAttributes([QgsField(th_id_field, QVariant.Int),QgsField(th_name_field, QVariant.String),QgsField("number_stops_nearby", QVariant.Int),QgsField("stops_near", QVariant.String),QgsField("stops_near_dist", QVariant.String)])
+				pr_outTH.addAttributes([QgsField(th_id_field, QVariant.Int),QgsField(th_name_field, QVariant.String),QgsField("number_stops_nearby", QVariant.Int),QgsField("stops_near", QVariant.String)])
 				index = 0
 				iter = trailhead_layer.getFeatures()
-				print "using shape"
 				for feature in iter:
 					geom = feature.geometry()
 					feature_id = feature[th_id_field]
@@ -750,15 +757,16 @@ class FindTransitAccessibleTrailheads:
 					#print stops_near
 					dist_list = []
 					stops_near_L = DList_TH_stops[feature_id]
+					stops_near_L.sort()
 					for s in stops_near_L:
 						#print s
 						k = str(feature_id) + ":" + str(s)
 						dist = distance_dictionary[k]
 						dist = int(dist)
-						dist_list_data = str(s) + ':' + str(dist)
+						dist_list_data = '{stop_id: ' + str(s) + ', distance ' + str(dist) + '}'
 						if not dist_list_data in dist_list:
 							dist_list.append(dist_list_data)					
-					dist_list.sort() 
+					#dist_list.sort() 
 					#trailhead_pt_WM = xform.transform(QgsPoint(geom.asPoint()))
 					#print "dist_list"
 					#print dist_list
@@ -767,10 +775,12 @@ class FindTransitAccessibleTrailheads:
 					dist_list = str(dist_list)
 					dist_list = dist_list.replace("[", "")
 					dist_list = dist_list.replace("]", "")
+					dist_list = dist_list.replace("'", "")
 					fet = QgsFeature()
 					fet.setGeometry(geom)
 					#fet.setGeometry(QgsGeometry.fromPoint(geom))
-					fet.setAttributes([feature_id, feature_name, num_stops_near, stops_near, dist_list])
+					#fet.setAttributes([feature_id, feature_name, num_stops_near, stops_near, dist_list])
+					fet.setAttributes([feature_id, feature_name, num_stops_near, dist_list])
 					pr_outTH.addFeatures([fet])
 					vl_outTH.commitChanges()
 				GeoJSONfile = os.path.join(GTFSDir, outputGeoJSON)
