@@ -30,6 +30,7 @@ from PyQt4.QtCore import *
 from qgis.analysis import *
 from collections import defaultdict
 import numpy
+import math
 
 # Initialize Qt resources from file resources.py
 import resources
@@ -204,6 +205,8 @@ class FindTransitAccessibleTrailheads:
         ###StopsShapefileName = self.dlg.StopsShapefileName.text()
         StopsShapefileName = "stops"
         AddToMapCanvas = False
+        ##GenerateTransitServiceData = True
+        SkipCalculationServiceData = False
         TrailheadData_shp = self.dlg.TrailheadData.text()
         BufferDistance = self.dlg.BufferDistance.text()
         th_id_field = self.dlg.th_id_field.text()
@@ -211,6 +214,7 @@ class FindTransitAccessibleTrailheads:
         outputGeoJSON = self.dlg.outputGeoJSON.text()
         PostGISExpr = self.dlg.tbPostGISExpr.text()		
         AddToMapCanvas = self.dlg.cbAddToMapCanvas.isChecked() # returns True if checked
+        SkipCalculationServiceData = self.dlg.SkipCalculationServiceData.isChecked() # returns True if checked
         ###trailBufferShpName = self.dlg.trailBufferShpName.text()
         #in_format = []
         #in_format.append("Shapefile")
@@ -546,7 +550,6 @@ class FindTransitAccessibleTrailheads:
 				#	print "NO EXPR!"
 				if AddToMapCanvas:
 					QgsMapLayerRegistry.instance().addMapLayer(vltWM)
-				#	print "NO EXPR!"
 				#QgsMapLayerRegistry.instance().addMapLayer(vltWM)
 				#	Buffer stops
 				vltb = QgsVectorLayer("Point?crs=EPSG:3857", "trailhead_buffer_dissolved", "memory")
@@ -571,7 +574,8 @@ class FindTransitAccessibleTrailheads:
 				overlayAnalyzer = QgsOverlayAnalyzer()
 				#overlayAnalyzer.intersection(vl, vlt, "C:/UWGIS/Geog569/Data/Test/TAToutput.shp")
 				overlayAnalyzer.intersection(vl, trailheadBufferd_layer, TATdShp)
-				TATd_layer = QgsVectorLayer(TATdShp, "TrAccTrailheads_diss_layer", "ogr")
+				TATd_layer = QgsVectorLayer(TATdShp, "TransitStops_diss_layer", "ogr")
+				###TATd_layer = QgsVectorLayer(TATdShp, "TrAccTrailheads_diss_layer", "ogr")
 				if not TATd_layer.isValid():
 					print "TATd layer failed to load!"	
 				if AddToMapCanvas:
@@ -593,7 +597,8 @@ class FindTransitAccessibleTrailheads:
 				overlayAnalyzer = QgsOverlayAnalyzer()
 				#overlayAnalyzer.intersection(vl, vlt, "C:/UWGIS/Geog569/Data/Test/TAToutput.shp")
 				overlayAnalyzer.intersection(vl, trailheadBuffer_layer, TATShp)
-				TAT_layer = QgsVectorLayer(TATShp, "TrAccTrailheads_layer", "ogr")
+				TAT_layer = QgsVectorLayer(TATShp, "TransitStops_NonDissolved_layer", "ogr")
+				#TAT_layer = QgsVectorLayer(TATShp, "TrAccTrailheads_layer", "ogr")
 				if not TAT_layer.isValid():
 					print "TAT layer failed to load!"	
 				if AddToMapCanvas:
@@ -602,17 +607,8 @@ class FindTransitAccessibleTrailheads:
 				THstopList = []
 				for feature in iter:
 					# retrieve every feature with its geometry and attributes
-					# fetch geometry
-					#geom = feature.geometry()
-					###print "Feature ID %d: " % feature.id()
-					###print geom.type()
-					###trailhead_name = feature['name']
-					###trailhead_id = feature['FEAT_ID']				
 					###trailhead_name = feature['name']
 					trailhead_id = feature[th_id_field]				
-					#####feature_id = feature[th_name_field]
-					####feature_id = "u" + str(feature_id)th_id_field
-					##feature_id = feature['FEAT_ID']
 					feature_id = feature[th_id_field]
 					TH_Stop = str(trailhead_id) + ":" +  str(feature_id)				
 					#print feature['stop_id']
@@ -663,9 +659,10 @@ class FindTransitAccessibleTrailheads:
 				#if working_dir doesn't exist, create it
 				###if os.path.exists(f_stop_times):			
 				if all_files_present:
-					print "starting service analysis...this might take some time"   
-					SummarizeTransitService = os.path.join(self.plugin_dir, "SummarizeTransitService.py")
-					execfile(SummarizeTransitService)
+				    if not SkipCalculationServiceData:
+					    print "starting service analysis...this might take some time"   
+					    SummarizeTransitService = os.path.join(self.plugin_dir, "SummarizeTransitService.py")
+					    execfile(SummarizeTransitService)
 				else:
 					print "The GTFS appears to be incomplete.  The following files seem to be missing."   				
 					#print "The GTFS appears to be incomplete.  Check that all parts are present and try again."   				
@@ -684,48 +681,38 @@ class FindTransitAccessibleTrailheads:
 					##identifies attributes for future use
 					#print "Feature ID %d: " % feature.id()
 					trailhead_id = feature[str('FEAT_ID')]
+					print trailhead_id
 					geom = feature.geometry()
 					th_x = geom.asPoint().x()	
 					th_y = geom.asPoint().y()
 					th_point = QgsPoint(th_x,th_y)
 					#transit_stop_id = feature['stop_id']
-					### replace this line with something that selects features from TAToutput that have the same trailhead id here...
 					iter_stops = TAT_layer.getFeatures() ###[new layer here?]
 					for stop_feature in iter_stops:
-					##identifies attributes for future use
-						#print "Feature ID %d: " % feature.id()
 						stop_id = stop_feature[str('stop_id')]
 						th_id = stop_feature[str('FEAT_ID')]
 						if th_id == trailhead_id:
 							stop_geom = stop_feature.geometry()
 							stop_id = stop_feature['stop_id']
 							DList_TH_stops[th_id].append(stop_id)
-							###print trailhead_id, stop_id
 							stop_x = stop_geom.asPoint().x()	
 							stop_y = stop_geom.asPoint().y()
-							#print stop_x, stop_y
-							### I think  we are using Web Mercator points, so the line below is all that is needed here..but (see below) 
 							s_point = QgsPoint(stop_x,stop_y)
-							### if the points were lat / lon, we would transform them and use the line below (and commenting out the line above!):
-							###s_point = xform.transform(QgsPoint(stop_lon,stop_lat))
-							### replace this line with something that figures out Euclidian dist
 							stop_distance = 0
-							#def dist(x,y):
-							#         return numpy.sqrt(numpy.sum(x-y)**2)
 							a = numpy.array(th_point)
 							b = numpy.array(s_point)
-							#stop_distance = dist(a,b)
-							stop_distance = numpy.sqrt(numpy.sum(a-b)**2)
-							# stop_distance = th_point (distance from) s_point
+							##stop_distance = numpy.sqrt(numpy.sum(a-b)**2)
+							stop_distance =  math.sqrt(th_point.sqrDist(s_point))
+							#print th_id
+							#print stop_id
+							#print stop_distance
+							####print math.sqrt(th_point.sqrDist(s_point))
 							th_stop = str(trailhead_id) + ":" + str(stop_id)
-							#print th_stop
-							distance_dictionary[th_stop] = stop_distance 		
-				## below is a placeholder for the distance calculations!
-				###print distance_dictionary
-				#pass
+							distance_dictionary[th_stop] = stop_distance
+							#if stop_distance < BufferDistance:
+							#    distance_dictionary[th_stop] = stop_distance 		
 				##outputGeoJSON
 				vl_outTH = QgsVectorLayer("Point?crs=EPSG:4326", "stop_points", "memory")
-				##vl.spatialReference
 				pr_outTH = vl_outTH.dataProvider()
 				#
 				# changes are only possible when editing the layer

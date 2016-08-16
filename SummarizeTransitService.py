@@ -1062,14 +1062,16 @@ for line in text_file:
 				#print routeNum
 				#print DICT_routeAgencyID
 				if agency_id != "agency_id":
-					agency = "|" + DICT_routeAgencyID[routeNum]
-					agency_idNum = DICT_routeAgencyID[routeNum]
+					agency = ",'" + DICT_routeAgencyID[routeNum] + "'"
+					#agency = "," + DICT_routeAgencyID[routeNum]
+					#agency_idNum = "'" + DICT_routeAgencyID[routeNum] + "'" 
+					agency_idNum = DICT_routeAgencyID[routeNum] 
 					#print "agency"
 					#print agency
 					#print agency_idNum
 					#print "--agency_id"
 					#print agency_idNum
-					agency_idName = agency_idNum + "|" + DICT_AgencyName[agency_idNum]
+					agency_idName = "'" + agency_idNum + "','" + DICT_AgencyName[agency_idNum] + "'" 
 			else:
 				agency = ""
 				agency_idNum = ""
@@ -1081,7 +1083,7 @@ for line in text_file:
 			route_long_name = DICT_routeLongName[routeNum]
 			#
 			DList_servedBy[l[c_stop_id]].append(route_short_name)
-			DList_servedByAgency[l[c_stop_id]].append(route_short_name + agency)
+			DList_servedByAgency[l[c_stop_id]].append("'" + route_short_name + "'" + agency)
 			DList_servedByTrip[l[c_stop_id]].append(l[c_trip_id])
 			DList_AgencyAtStop[l[c_stop_id]].append(agency_idNum)
 			DList_AgencyNameAtStop[l[c_stop_id]].append(agency_idName)
@@ -1089,44 +1091,44 @@ for line in text_file:
 			servHr = l[c_departure_time].split(":")
 			##if str(WD_servID) == str(serviceDay):
 			if str(serviceDay) in servID_list_wed:
-				DList_AllDepartures_WD[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name) +  "|"  + direction_id +  "|" + str(agency))
-				#DList_AllDepartures_WD[l[c_stop_id]].append(str(agency) + str(route_short_name) + "|" + str(l[c_departure_time]))
+				DList_AllDepartures_WD[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name) +  "',"  + direction_id +  "" + str(agency) + "}")
+				#DList_AllDepartures_WD[l[c_stop_id]].append(str(agency) + str(route_short_name) + "," + str(l[c_departure_time]))
 				####print "hour:", str(str(servHr[0]))
 				if str(servHr[0]) == str(AM):
-						DList_AMDepartures_WD[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name) +  "|"  + direction_id +  "|" + str(agency))
+						DList_AMDepartures_WD[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name) +  "',"  + direction_id +  "" + str(agency) + "}")
 				if str(servHr[0]) == str(PM):
-						DList_PMDepartures_WD[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name) +  "|"  + direction_id +  "|" +  str(agency))
+						DList_PMDepartures_WD[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name) +  "',"  + direction_id +  "" +  str(agency) + "}")
 				###
 				if str(servHr[0])in AM_block:
-						DList_AMDeparturesBLK_WD[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name) +  "|"  + direction_id +  "|" +  str(agency))
+						DList_AMDeparturesBLK_WD[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name) +  "',"  + direction_id +  "" +  str(agency) + "}")
 				if str(servHr[0])in PM_block:
-						DList_PMDeparturesBLK_WD[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name) +  "|"  + direction_id +  "|" +  str(agency))
+						DList_PMDeparturesBLK_WD[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name) +  "',"  + direction_id +  "" +  str(agency) + "}")
 				###
 			##if str(SA_servID) == str(serviceDay):
 			if str(serviceDay) in servID_list_sat:    
-					DList_AllDepartures_SA[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name) +  "|"  + direction_id +  "|" +  str(agency))
+					DList_AllDepartures_SA[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name) +  "',"  + direction_id +  "" +  str(agency) + "}")
 					if str(servHr[0]) == str(AM):
-							DList_AMDepartures_SA[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name)  +  "|"  + direction_id +  "|" +  str(agency))
+							DList_AMDepartures_SA[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name)  +  "',"  + direction_id +  "" +  str(agency) + "}")
 					if str(servHr[0]) == str(PM):
-							DList_PMDepartures_SA[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name)  +  "|"  + direction_id +  "|" +  str(agency))
+							DList_PMDepartures_SA[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name)  +  "',"  + direction_id +  "" +  str(agency) + "}")
 					###
 					if str(servHr[0])in AM_block:
-							DList_AMDeparturesBLK_SA[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name)  +  "|" + direction_id +  "|" +  str(agency))
+							DList_AMDeparturesBLK_SA[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name)  +  "'," + direction_id +  "" +  str(agency) + "}")
 					if str(servHr[0])in PM_block:
-							DList_PMDeparturesBLK_SA[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name)  +  "|"  + direction_id +  "|" +  str(agency))
+							DList_PMDeparturesBLK_SA[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name)  +  "',"  + direction_id +  "" +  str(agency) + "}")
 					###
 			##if str(SU_servID) == str(serviceDay):
 			if str(serviceDay) in servID_list_sun:    
-					DList_AllDepartures_SU[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name)  +  "|"  + direction_id +  "|" +  str(agency))
+					DList_AllDepartures_SU[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name)  +  "',"  + direction_id +  "" +  str(agency) + "}")
 					if str(servHr[0]) == str(AM):
-							DList_AMDepartures_SU[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name)  +  "|" + direction_id +  "|" +  str(agency))
+							DList_AMDepartures_SU[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name)  +  "'," + direction_id +  "" +  str(agency) + "}")
 					if str(servHr[0]) == str(PM):
-							DList_PMDepartures_SU[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name)  +  "|" + direction_id +  "|" +  str(agency))
+							DList_PMDepartures_SU[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name)  +  "'," + direction_id +  "" +  str(agency) + "}")
 					###
 					if str(servHr[0])in AM_block:
-							DList_AMDeparturesBLK_SU[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name)  +  "|" + direction_id +  "|" +  str(agency))
+							DList_AMDeparturesBLK_SU[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name)  +  "'," + direction_id +  "" +  str(agency) + "}")
 					if str(servHr[0])in PM_block:
-							DList_PMDeparturesBLK_SU[l[c_stop_id]].append(str(l[c_departure_time]) + "|" + str(route_short_name)  +  "|" + direction_id +  "|" +  str(agency))
+							DList_PMDeparturesBLK_SU[l[c_stop_id]].append("{" + str(l[c_departure_time]) + ",'" + str(route_short_name)  +  "'," + direction_id +  "" +  str(agency) + "}")
 					###
 
 servedBy = []
@@ -1142,7 +1144,8 @@ print "GTFS_start_date:", GTFS_WD_start_date
 print "GTFS_end_date:", GTFS_WD_end_date
 
 ## Open a file to write to:
-summary_file_name = "service_summmary.csv"
+###summary_file_name = "service_summmary.csv"
+summary_file_name = "service_summmary.txt"
 summary_file = os.path.join(gtfs_path, summary_file_name)
 
 #fieldnames = ("stop_id,stop_name,stop_LatLon,routes_serving_stop,agency_name,agency_url,agency_phone,GTFS_WD_start_date,GTFS_WD_end_date,AM_WD_depart,PM_WD_depart,AM_SA_depart,PM_SA_depart,AM_SU_depart,PM_SU_depart,AvgAM_WD_BlkStops,AvgPM_WD_BlkStops,AvgAM_SA_BlkStops,AvgPM_SA_BlkStops,AvgAM_SU_BlkStops,AvgPM_SU_BlkStops,daily_WD_stops,daily_SA_stops,daily_SU_stops,AM_departures_WD,PM_departures_WD,AM_departures_SA,PM_departures_SA,AM_departures_SU,PM_departures_SU,all_WD_dep,all_SA_dep,all_SU_dep")
@@ -1209,7 +1212,10 @@ for stop in id_stops:
 	##
 	setStopListAgency = set(StopListAgency)
 	for t in setStopListAgency:
-			StopServiceAgency.append(t)
+		StopServiceAgency.append("{" + t + "}")
+		###StopServiceAgency.append(t)
+	### Added to make this a list element
+	StopServiceAgency = StopServiceAgency	
 	#print "Transit routes (with agency) that serve stop", str(stop), ":", str(StopServiceAgency)
 	#
 	setAgenciesAtStop = set(AgenciesAtStop)
@@ -1298,37 +1304,43 @@ for stop in id_stops:
 	##print "Average # departures, PM Block SU at stop", str(stop), ":", float(PMDepBLK_SU / PM_block_hours)
 	#
 	#EDT_StopService = str(StopService)
-	#EDT_StopService.replace(",", "|")
+	#EDT_StopService.replace(",", ",")
 	##EDT_StopService.replace("[", "")
 	#EDT_StopService.replace("]", "")
 	#writeString = str(stop) + ',' +  DICT_stop_name[stop] + ',' + str(DICT_stop_lat[stop]) + '|' + str(DICT_stop_lon[stop]) + ',"' +  str(StopService) + '",' + str(AMDep_WD) + ',' +  str(PMDep_WD) + ',' +  str(AMDep_SA) + ',' +  str(PMDep_SA) + ',' +  str(AMDep_SU) + ',' +  str(PMDep_SU) + ',' + str(AMDepBLK_AVG_HR_WD)  + ',' +  str(PMDepBLK_AVG_HR_WD)  + ',' +  str(AMDepBLK_AVG_HR_SA)  + ',' +  str(PMDepBLK_AVG_HR_SA)  + ',' +  str(AMDepBLK_AVG_HR_SU)  + ',' +  str(PMDepBLK_AVG_HR_SU) + ','  + str(DailyDepWD) + ',' + str(DailyDepSA) + ',' + str(DailyDepSU) + ',"' +  str(DList_AMDepartures_WD[stop]) + '","' + str(DList_PMDepartures_WD[stop]) + '","' +  str(DList_AMDepartures_SA[stop])  + '","' + str(DList_PMDepartures_SA[stop])  + '","' + str(DList_AMDepartures_SU[stop])  + '","' + str(DList_PMDepartures_SU[stop])   + '",' + str(DList_AllDepartures_WD[stop]) + '","'  +  + str(DList_AllDepartures_SA[stop]) + '","'  +  + str(DList_AllDepartures_SU[stop]) + '",'  + '\n'
 	######writeString = str(stop) + ',' + DICT_stop_name[stop] + ',' + str(DICT_stop_lat[stop]) + '|' + str(DICT_stop_lon[stop]) + ',"' +  str(StopService)  + ',' + str(agency_name) + ',' + str(agency_url)  + ',' + str(agency_phone) + ',' + str(GTFS_WD_start_date) + ',' + str(GTFS_WD_end_date) + '",' + str(AMDep_WD) + ',' +  str(PMDep_WD) + ',' +  str(AMDep_SA) + ',' +  str(PMDep_SA) + ',' +  str(AMDep_SU) + ',' +  str(PMDep_SU) + ',' + str(AMDepBLK_AVG_HR_WD)  + ',' +  str(PMDepBLK_AVG_HR_WD)  + ',' +  str(AMDepBLK_AVG_HR_SA)  + ',' +  str(PMDepBLK_AVG_HR_SA)  + ',' +  str(AMDepBLK_AVG_HR_SU)  + ',' +  str(PMDepBLK_AVG_HR_SU) + ','  + str(DailyDepWD) + ',' + str(DailyDepSA) + ',' + str(DailyDepSU) + ',"' +  str(DList_AMDepartures_WD[stop]) + '","' + str(DList_PMDepartures_WD[stop]) + '","' +  str(DList_AMDepartures_SA[stop])  + '","' + str(DList_PMDepartures_SA[stop])  + '","' + str(DList_AMDepartures_SU[stop])  + '","' + str(DList_PMDepartures_SU[stop]) + '","' + str(DList_AllDepartures_WD[stop]) + '","'  +  str(DList_AllDepartures_SA[stop]) + '","'  +  str(DList_AllDepartures_SU[stop]) + '",'  + '\n'
 	#################writeString = str(stop) + ',' + DICT_stop_name[stop] + ',' + str(DICT_stop_lat[stop]) + '|' + str(DICT_stop_lon[stop]) + ',"' +  str(StopService) + '",' + str(AMDep_WD) + ',' +  str(PMDep_WD) + ',' +  str(AMDep_SA) + ',' +  str(PMDep_SA) + ',' +  str(AMDep_SU) + ',' +  str(PMDep_SU) + ',' + str(AMDepBLK_AVG_HR_WD)  + ',' +  str(PMDepBLK_AVG_HR_WD)  + ',' +  str(AMDepBLK_AVG_HR_SA)  + ',' +  str(PMDepBLK_AVG_HR_SA)  + ',' +  str(AMDepBLK_AVG_HR_SU)  + ',' +  str(PMDepBLK_AVG_HR_SU) + ','  + str(DailyDepWD) + ',' + str(DailyDepSA) + ',' + str(DailyDepSU) + ',"' +  str(DList_AMDepartures_WD[stop]) + '","' + str(DList_PMDepartures_WD[stop]) + '","' +  str(DList_AMDepartures_SA[stop])  + '","' + str(DList_PMDepartures_SA[stop])  + '","' + str(DList_AMDepartures_SU[stop])  + '","' + str(DList_PMDepartures_SU[stop]) + '","' + str(DList_AllDepartures_WD[stop]) + '","'  +  str(DList_AllDepartures_SA[stop]) + '","'  +  str(DList_AllDepartures_SU[stop]) + '",'  + '\n'
-	writeString = str(stop) + ','
+	writeString = '"' + str(stop) + '",'
 	if stop in DICT_stop_name:
 		#print(DICT_stop_name[stop])
-		writeString = writeString + DICT_stop_name[stop] + ','
+		writeString = writeString + '"' + DICT_stop_name[stop] + '",'
 	else:
 		writeString = writeString + ','
 	if stop in DICT_stop_lat:
-		writeString = writeString + str(DICT_stop_lat[stop]) + '|' + str(DICT_stop_lon[stop]) + ','
+		writeString = writeString + '"' + str(DICT_stop_lat[stop]) + ', ' + str(DICT_stop_lon[stop]) + '",'
 		writeString = writeString + '"' + str(StopService) + '",'
-		writeString = writeString + '"' + str(StopServiceAgency) + '",'
-		writeString = writeString + str(agency_name) + ','
-		writeString = writeString + str(agency_url) + ','
+		#writeString = writeString + '"' + str(StopServiceAgency) + '",'
+		StopServiceAgency = str(StopServiceAgency).replace('"','')
+		#print StopServiceAgency
+		#writeString = writeString + '"' + StopServiceAgency + '",'
+		writeString = writeString + '"' + StopServiceAgency + '",'
+		agency_name = str(agency_name).replace('"','')
+		writeString = writeString + '"' + str(agency_name) + '",'
+		writeString = writeString + '"' + str(agency_url) + '",'
 		writeString = writeString + str(GTFS_WD_start_date) + ','
 		writeString = writeString + str(GTFS_WD_end_date) + ','
 		#writeString = writeString + str(AgencyNameStop) + ','
-		writeString = writeString + str(AgencyStop) + ','
-		writeString = writeString + str(AgencyNameStop) + ','
+		writeString = writeString + '"' + str(AgencyStop) + '",'
+		AgencyNameStop = str(AgencyNameStop).replace('"','')
+		writeString = writeString + '"' + str(AgencyNameStop) + '",'
 		if zone_id_used:
-			writeString = writeString + DICT_zone_id[stop] + ','
+			writeString = writeString + '"' + DICT_zone_id[stop] + '",'
 		else:
-			writeString = writeString + "UNK,"
+			writeString = writeString + '"UNK",'
 		if fare_url_used:
-			writeString = writeString + str(publishing_agency_fareURL) + ','
+			writeString = writeString + '"' + str(publishing_agency_fareURL) + '",'
 		else:
-			writeString = writeString + "UNK,"
+			writeString = writeString + '"UNK",'
 		writeString = writeString + str(AMDep_WD) + ','
 		writeString = writeString + str(PMDep_WD) + ','
 		writeString = writeString + str(AMDep_SA) + ','
@@ -1350,9 +1362,15 @@ for stop in id_stops:
 		#writeString = writeString + '"' + str(DList_PMDepartures_SA[stop])  + '",'
 		#writeString = writeString + '"' + str(DList_AMDepartures_SU[stop])  + '",'
 		#writeString = writeString + '"' + str(DList_PMDepartures_SU[stop]) + '",'
-		writeString = writeString + '"' + str(DList_AllDepartures_WD[stop]) + '",'
-		writeString = writeString + '"' + str(DList_AllDepartures_SA[stop]) + '",'
-		writeString = writeString + '"' + str(DList_AllDepartures_SU[stop]) + '",'
+		AllWDDepartures = str(DList_AllDepartures_WD[stop]).replace('"','')
+		writeString = writeString + '"' + AllWDDepartures + '",'
+		###writeString = writeString + '"' + str(DList_AllDepartures_WD[stop]) + '",'
+		AllSADepartures = str(DList_AllDepartures_SA[stop]).replace('"','')
+		writeString = writeString + '"' + AllSADepartures + '",'
+		####writeString = writeString + '"' + str(DList_AllDepartures_SA[stop]) + '",'
+		AllSUDepartures = str(DList_AllDepartures_SU[stop]).replace('"','')
+		writeString = writeString + '"' + AllSUDepartures + '",'
+		###writeString = writeString + '"' + str(DList_AllDepartures_SU[stop]) + '",'
 		writeString = writeString + '\n'
 	else:
 		writeString = writeString + "Warning: this stop is not in the stop dictionary." + '\n' 
@@ -1385,7 +1403,7 @@ file.close()
 ##    for stop in id_stops:
 ##        writer.writerow("stop")
 ##        ##writer.writerow({stop})
-##        #writer.writerow({stop, "[", DICT_stop_lat[stop], "|", DICT_stop_lon[stop], "]", StopService})
+##        #writer.writerow({stop, "[", DICT_stop_lat[stop], ",", DICT_stop_lon[stop], "]", StopService})
 ##        #print "Stop", stop
 ##        #print "Stop name", DICT_stop_name[stop]
 ##        #print "Stop lat/lon", "[", DICT_stop_lat[stop], ",", DICT_stop_lon[stop], "]"
