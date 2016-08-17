@@ -681,7 +681,7 @@ class FindTransitAccessibleTrailheads:
 					##identifies attributes for future use
 					#print "Feature ID %d: " % feature.id()
 					trailhead_id = feature[str('FEAT_ID')]
-					print trailhead_id
+					#print trailhead_id
 					geom = feature.geometry()
 					th_x = geom.asPoint().x()	
 					th_y = geom.asPoint().y()
