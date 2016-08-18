@@ -58,7 +58,7 @@
   <widget class="QLineEdit" name="TrailheadData">
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>50</x>
      <y>350</y>
      <width>301</width>
      <height>20</height>
@@ -331,7 +331,7 @@
   <widget class="QLabel" name="label_14">
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>50</x>
      <y>330</y>
      <width>271</width>
      <height>16</height>
@@ -351,7 +351,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Trailhead ID field&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>Unique ID field</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_16">
@@ -399,7 +399,7 @@
      <x>20</x>
      <y>110</y>
      <width>351</width>
-     <height>51</height>
+     <height>41</height>
     </rect>
    </property>
    <property name="title">

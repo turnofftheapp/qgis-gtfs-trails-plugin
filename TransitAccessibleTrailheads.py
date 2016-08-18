@@ -106,6 +106,8 @@ class FindTransitAccessibleTrailheads:
         status_tip=None,
         whats_this=None,
         parent=None):
+        icon_path=os.path.join(self.plugin_dir, 'icon.png')
+
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -174,7 +176,8 @@ class FindTransitAccessibleTrailheads:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/FindTransitAccessibleTrailheads/icon.png'
+        ###icon_path = ':/plugins/FindTransitAccessibleTrailheads/icon.png'
+        icon_path = os.path.join(self.plugin_dir, 'icon.png')
         self.add_action(
             icon_path,
             text=self.tr(u'Identify transit accessible trailheads'),
@@ -411,7 +414,8 @@ class FindTransitAccessibleTrailheads:
 					#
 					#vlayer = QgsVectorLayer(uri.uri(), "layer name you like", "postgres")
 					DB_TH_layer = QgsVectorLayer(uri.uri(), "DB_TH_layer", "postgres")
-					QgsMapLayerRegistry.instance().addMapLayer(DB_TH_layer)
+					if AddToMapCanvas:
+						QgsMapLayerRegistry.instance().addMapLayer(DB_TH_layer)
 					#
 					stop_extent = QgsVectorLayer("Polygon?crs=EPSG:4326", "stop_extent", "memory")
 					pr = stop_extent.dataProvider()
@@ -429,8 +433,9 @@ class FindTransitAccessibleTrailheads:
 					##fet.setGeometry(QgsGeometry.fromPolygon([[QgsPoint(xmin,ymin),QgsPoint(xmin,ymax), QgsPoint(xmax,ymax), QgsPoint(xmax,ymin), QgsPoint(xmin,ymin)]]))
 					fet.setGeometry(QgsGeometry.fromPolygon([[stop_ex_SW, stop_ex_NW, stop_ex_NE, stop_ex_SE, stop_ex_SW]]))
 					pr.addFeatures([fet])
-					stop_extent.commitChanges()				
-					QgsMapLayerRegistry.instance().addMapLayer(stop_extent)
+					stop_extent.commitChanges()
+					if AddToMapCanvas:
+						QgsMapLayerRegistry.instance().addMapLayer(stop_extent)
 					#
 					print "overlay points! - using extent from stops"
 					overlayAnalyzer = QgsOverlayAnalyzer()
@@ -719,7 +724,7 @@ class FindTransitAccessibleTrailheads:
 				vl_outTH.startEditing()
 				# add fields
 				##pr_outTH.addAttributes([QgsField(th_id_field, QVariant.Int),QgsField(th_name_field, QVariant.String),QgsField("number_stops_nearby", QVariant.Int),QgsField("stops_near", QVariant.String),QgsField("stops_near_dist", QVariant.String)])
-				pr_outTH.addAttributes([QgsField(th_id_field, QVariant.Int),QgsField(th_name_field, QVariant.String),QgsField("number_stops_nearby", QVariant.Int),QgsField("stops_near", QVariant.String)])
+				pr_outTH.addAttributes([QgsField(th_id_field, QVariant.Int),QgsField(th_name_field, QVariant.String),QgsField("number_stops_nearby", QVariant.Int),QgsField("stops_near", QVariant.String),QgsField("stops_distances", QVariant.String)])
 				index = 0
 				iter = trailhead_layer.getFeatures()
 				for feature in iter:
@@ -743,6 +748,8 @@ class FindTransitAccessibleTrailheads:
 					stops_near = stops_near.replace("]", "")
 					#print stops_near
 					dist_list = []
+					stop_list = []
+					stop_dist_list = []					
 					stops_near_L = DList_TH_stops[feature_id]
 					stops_near_L.sort()
 					for s in stops_near_L:
@@ -750,9 +757,13 @@ class FindTransitAccessibleTrailheads:
 						k = str(feature_id) + ":" + str(s)
 						dist = distance_dictionary[k]
 						dist = int(dist)
+						#stop_list_data = str(s) + ', '
+						#dist_list_data = str(dist) + ', '
 						dist_list_data = '{stop_id: ' + str(s) + ', distance ' + str(dist) + '}'
 						if not dist_list_data in dist_list:
 							dist_list.append(dist_list_data)					
+							stop_list.append(s)
+							stop_dist_list.append(dist)
 					#dist_list.sort() 
 					#trailhead_pt_WM = xform.transform(QgsPoint(geom.asPoint()))
 					#print "dist_list"
@@ -765,9 +776,12 @@ class FindTransitAccessibleTrailheads:
 					dist_list = dist_list.replace("'", "")
 					fet = QgsFeature()
 					fet.setGeometry(geom)
+					stop_list = str(stop_list)
+					stop_list = stop_list.replace("u'", "'")
+					stop_dist_list = str(stop_dist_list)
 					#fet.setGeometry(QgsGeometry.fromPoint(geom))
 					#fet.setAttributes([feature_id, feature_name, num_stops_near, stops_near, dist_list])
-					fet.setAttributes([feature_id, feature_name, num_stops_near, dist_list])
+					fet.setAttributes([feature_id, feature_name, num_stops_near, stop_list, stop_dist_list])
 					pr_outTH.addFeatures([fet])
 					vl_outTH.commitChanges()
 				GeoJSONfile = os.path.join(GTFSDir, outputGeoJSON)
